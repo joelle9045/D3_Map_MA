@@ -1,10 +1,24 @@
 <!DOCTYPE html>
 <meta charset="utf-8">
 <style>
+        #tooltip{
+                position: absolute;
+                z-index:2;
+                background: brown;
+                width:130px;
+                height:20px;
+                color:white;
+                font-size:14px;
+                padding:5px;
+                top: -150px;
+                left: -150px;
+                font-family: "sans-serif;
+                fill-opacity:0.5;
 
+        }
 </style>
 <body>
-
+<div id="tooltip"></div>
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
 <script>
@@ -41,15 +55,36 @@
                 mexico = map.selectAll("path").data(massachusetts.features);
 
                 var click = function(d) {
-                        mexico.attr("fill-opacity", 0.2)
+                        mexico.transition()
+                                .duration(200)
+                                .attr("fill-opacity", 0.3)
                                 .attr("stroke","pink");
-                        d3.select(this).attr("fill-opacity", 1);
+                        d3.select(this).transition()
+                                .duration(200)
+                                .attr("fill-opacity", 1);
                 }
+                var mouseout = function(d) {
+                        mexico.transition()
+                                .duration(200)
+                                .attr("fill-opacity",1)
+                                .attr("stroke","coral");
+
+                }
+                var hover= function (d){
+                        var div= document.getElementById("tooltip");
+                        div.style.left = event.pageX+"px";
+                        div.style.top = event.pageY+"px";
+                        div.innerHTML = "hi";
+                }
+
 
                 mexico.enter()
                         .append("path")
                         .attr("d",path)
-                        .on("click",click);
+                        .on("mouseover",click)
+                        .on("mouseout",mouseout)
+//                        .on("mouseover",hover)
+                ;
 
                 var color =d3.scale.linear().domain([0,300]).range(["red","yellow"]);
 
@@ -57,7 +92,7 @@
                 mexico.attr("stroke","coral");
 
                 var dataPoint =[{"name":"Dartmouth","lat":"41.602310","lon":"-70.941900"},{"name":"Assonet","lat":"41.797910","lon":"-71.074570"},
-                        {"name":"Boston","lat":"42.3583333","lon":"-71.0602778"},{"name":"Worcester","lat":"42.2625","lon":"-71.8027778"}];
+                        {"name":"Boston","lat":"42.3583333","lon":"-71.0602778"},{"name":"Worcester","lat":"42.2625","lon":"-71.8027778"},{"name":"Framingham","lat":"42.265950","lon":"-71.431070"}];
                 var cityPoints = svg.selectAll("circle").data(dataPoint);
                 var cityText= svg.selectAll("text").data(dataPoint);
                 cityPoints.enter()
@@ -73,6 +108,11 @@
                         .attr("dx",5)
                         .attr("dy",3)
                         .text(function(d){return d.name});
+
+
+
+
+
 
 
         });
