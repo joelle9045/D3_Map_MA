@@ -20,10 +20,13 @@
 
                 console.log(mapData);
 
+
                 var projection = d3.geo.mercator();
                 var mexico;
                 var path = d3.geo.path().projection(projection);
                 var massachusetts = topojson.feature(mapData,mapData.objects.MA);
+
+                console.log(massachusetts);
 
                 projection.scale(1).translate([0,0]);
 
@@ -38,7 +41,8 @@
                 mexico = map.selectAll("path").data(massachusetts.features);
 
                 var click = function(d) {
-                        mexico.attr("fill-opacity", 0.2);
+                        mexico.attr("fill-opacity", 0.2)
+                                .attr("stroke","pink");
                         d3.select(this).attr("fill-opacity", 1);
                 }
 
@@ -47,10 +51,28 @@
                         .attr("d",path)
                         .on("click",click);
 
-                var color =d3.scale.linear().domain([0,538]).range(["red","yellow"]);
+                var color =d3.scale.linear().domain([0,300]).range(["red","yellow"]);
 
                 mexico.attr("fill",function(d,i){return color(i)});
-                mexico.attr("stroke","purple");
+                mexico.attr("stroke","coral");
+
+                var dataPoint =[{"name":"Dartmouth","lat":"41.602310","lon":"-70.941900"},{"name":"Assonet","lat":"41.797910","lon":"-71.074570"},
+                        {"name":"Boston","lat":"42.3583333","lon":"-71.0602778"},{"name":"Worcester","lat":"42.2625","lon":"-71.8027778"}];
+                var cityPoints = svg.selectAll("circle").data(dataPoint);
+                var cityText= svg.selectAll("text").data(dataPoint);
+                cityPoints.enter()
+                        .append("circle")
+                        .attr("cx",function(d){return projection([d.lon, d.lat])[0]})
+                        .attr("cy",function(d){return projection([d.lon, d.lat])[1]})
+                        .attr("r",4)
+                        .attr("fill","steelblue");
+                cityText.enter()
+                        .append("text")
+                        .attr("x",function(d){return projection([d.lon, d.lat])[0]})
+                        .attr("y",function(d){return projection([d.lon, d.lat])[1]})
+                        .attr("dx",5)
+                        .attr("dy",3)
+                        .text(function(d){return d.name});
 
 
         });
