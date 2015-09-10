@@ -4,24 +4,28 @@
         #tooltip{
                 position: absolute;
                 z-index:2;
-                background: brown;
+                background: black;
                 width:130px;
                 height:20px;
+                outline: coral solid 2px;
                 color:white;
                 font-size:14px;
                 padding:5px;
                 top: -150px;
                 left: -150px;
                 font-family: "sans-serif;
-                fill-opacity:0.5;
-
         }
 </style>
 <body>
 <div id="tooltip"></div>
+
 <script src="http://d3js.org/d3.v3.min.js"></script>
 <script src="http://d3js.org/topojson.v1.min.js"></script>
+
 <script>
+
+
+
         var width = 960,
                 height = 1160;
 
@@ -29,7 +33,7 @@
                 .attr("width", width)
                 .attr("height", height);
 
-        d3.json("map.json", function(error, mapData) {
+        d3.json("map2.json", function(error, mapData) {
                 if (error) {return console.error(error);}
 
                 console.log(mapData);
@@ -38,7 +42,7 @@
                 var projection = d3.geo.mercator();
                 var mexico;
                 var path = d3.geo.path().projection(projection);
-                var massachusetts = topojson.feature(mapData,mapData.objects.MA);
+                var massachusetts = topojson.feature(mapData,mapData.objects.tl_2012_25_cousub);
 
                 console.log(massachusetts);
 
@@ -57,7 +61,7 @@
                 var click = function(d) {
                         mexico.transition()
                                 .duration(200)
-                                .attr("fill-opacity", 0.3)
+                                .attr("fill-opacity", 0.4)
                                 .attr("stroke","pink");
                         d3.select(this).transition()
                                 .duration(200)
@@ -70,45 +74,105 @@
                                 .attr("stroke","coral");
 
                 }
-                var hover= function (d){
-                        var div= document.getElementById("tooltip");
-                        div.style.left = event.pageX+"px";
-                        div.style.top = event.pageY+"px";
-                        div.innerHTML = "hi";
-                }
-
 
                 mexico.enter()
                         .append("path")
-                        .attr("d",path)
-                        .on("mouseover",click)
-                        .on("mouseout",mouseout)
-//                        .on("mouseover",hover)
-                ;
+                        .filter(function(d){return d.properties.NAME != "County subdivisions not defined";})
+                        .attr("d",path);
+//                mexico.filter(function(d){return d.properties.NAME == "County subdivisions not defined";}).attr("fill","white");
 
-                var color =d3.scale.linear().domain([0,300]).range(["red","yellow"]);
+                mexico.on("click",click)
+                        .on("mouseout",mouseout)
+                        .on("mouseover",function(d){
+
+                                console.log(d.properties.NAME);
+                                console.log(d.properties);
+
+                                //tooltip
+//                                var div= document.getElementById("tooltip");
+//                                div.style.left = event.pageX+"px";
+//                                div.style.top = event.pageY+"px";
+//                                div.innerHTML = d.properties.NAME;
+
+                                //change map color
+                                mexico.attr("fill",function(d,i){return color(i)});
+                                d3.select(this).attr("fill","brown");
+
+                                //read selected value
+                                var Name=d.properties.NAME;
+
+                                //highlight points and text related
+                                cityPoints.attr("r",4)
+                                        .attr("fill", "steelblue");
+                                cityText.attr("font-size",16)
+                                        .attr("fill", "brown");
+                                cityPoints.filter(function(d){return d.name==Name;})
+                                        .attr("r",5)
+                                        .attr("fill", "yellow");
+                                cityText.filter(function(d){return d.name==Name;})
+                                        .attr("font-size",20)
+                                        .attr("fill", "black");
+
+                        }
+                );
+                mexico.selectAll("path")
+                        .filter(function(d) { return d.properties.NAME == "County subdivisions not defined";})
+                        .style("opacity",0);
+                var color =d3.scale.linear().domain([0,350]).range(["red","yellow"]);
 
                 mexico.attr("fill",function(d,i){return color(i)});
                 mexico.attr("stroke","coral");
 
-                var dataPoint =[{"name":"Dartmouth","lat":"41.602310","lon":"-70.941900"},{"name":"Assonet","lat":"41.797910","lon":"-71.074570"},
-                        {"name":"Boston","lat":"42.3583333","lon":"-71.0602778"},{"name":"Worcester","lat":"42.2625","lon":"-71.8027778"},{"name":"Framingham","lat":"42.265950","lon":"-71.431070"}];
+
+
+
+                var dataPoint = [{"name": "Dartmouth", "lat": "41.602310", "lon": "-70.941900"},
+                        {"name": "Assonet", "lat": "41.797910", "lon": "-71.074570"},
+                        {"name": "Boston", "lat": "42.3583333", "lon": "-71.0602778"},
+                        {"name": "Worcester", "lat": "42.2625", "lon": "-71.8027778"},
+                        {"name": "Framingham", "lat": "42.265950", "lon": "-71.431070", "Street": "Benthany Road", "Zipcode": "01702"}];
                 var cityPoints = svg.selectAll("circle").data(dataPoint);
-                var cityText= svg.selectAll("text").data(dataPoint);
+                var cityText = svg.selectAll("text").data(dataPoint);
                 cityPoints.enter()
                         .append("circle")
-                        .attr("cx",function(d){return projection([d.lon, d.lat])[0]})
-                        .attr("cy",function(d){return projection([d.lon, d.lat])[1]})
-                        .attr("r",4)
-                        .attr("fill","steelblue");
+                        .attr("cx", function (d) {
+                                return projection([d.lon, d.lat])[0]
+                        })
+                        .attr("cy", function (d) {
+                                return projection([d.lon, d.lat])[1]
+                        })
+                        .attr("r", 4)
+                        .attr("fill", "steelblue")
+                        .on("mouseover",function(d,i){
+                                var Name= d.name;
+                                cityPoints.attr("r",4)
+                                        .attr("fill", "steelblue");
+                                d3.select(this).attr("r", 5).attr("fill", "yellow");
+                                cityText.attr("font-size",16)
+                                        .attr("fill", "brown");
+                                cityText.filter(function(d){return d.name==Name;})
+                                        .attr("font-size",20)
+                                        .attr("fill", "black");
+                                mexico.attr("fill",function(d,i){return color(i)});
+                                mexico.filter(function (d){
+                                        return d.properties.NAME==Name;
+                                }).attr("fill","brown");
+
+                        });
                 cityText.enter()
                         .append("text")
-                        .attr("x",function(d){return projection([d.lon, d.lat])[0]})
-                        .attr("y",function(d){return projection([d.lon, d.lat])[1]})
-                        .attr("dx",5)
-                        .attr("dy",3)
-                        .text(function(d){return d.name});
-
+                        .attr("x", function (d) {
+                                return projection([d.lon, d.lat])[0]
+                        })
+                        .attr("y", function (d) {
+                                return projection([d.lon, d.lat])[1]
+                        })
+                        .attr("dx", 5)
+                        .attr("dy", 3)
+                        .text(function (d) {
+                                return d.name
+                        })
+                        .attr("fill", "brown");
 
 
 
